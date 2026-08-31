@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LocalStore Forecast | Retail Sales Forecasting for Local Stores</title>
+<style>
+:root{
+  --bg:#0f172a; --card:#1e293b; --card2:#273449; --text:#e2e8f0; --muted:#94a3b8;
+  --accent:#38bdf8; --accent2:#818cf8; --green:#34d399; --red:#f87171; --amber:#fbbf24;
+  --border:#334155; --radius:14px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
+.container{max-width:1100px;margin:0 auto;padding:0 22px}
+a{color:var(--accent);text-decoration:none}
+
+/* Nav */
+nav{position:sticky;top:0;background:rgba(15,23,42,.85);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);z-index:50}
+.nav-inner{display:flex;align-items:center;justify-content:space-between;padding:14px 22px;max-width:1100px;margin:0 auto}
+.logo{font-weight:800;font-size:1.15rem}
+.logo span{color:var(--accent)}
+.nav-links{display:flex;gap:22px;font-size:.95rem}
+.nav-links a{color:var(--muted)}
+.nav-links a:hover{color:var(--text)}
+.hamburger{display:none;background:none;border:none;color:var(--text);font-size:1.6rem;cursor:pointer}
+
+/* Hero */
+.hero{background:radial-gradient(1200px 500px at 20% -10%,rgba(56,189,248,.18),transparent),radial-gradient(900px 400px at 90% 10%,rgba(129,140,248,.15),transparent);padding:80px 0 60px;text-align:center}
+.hero h1{font-size:2.6rem;line-height:1.15;max-width:800px;margin:0 auto 18px}
+.hero h1 .grad{background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p{color:var(--muted);max-width:680px;margin:0 auto 30px;font-size:1.1rem}
+.cta{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.btn{display:inline-block;padding:12px 22px;border-radius:10px;font-weight:600;cursor:pointer;border:none;font-size:1rem}
+.btn-primary{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#0f172a}
+.btn-ghost{background:transparent;color:var(--text);border:1px solid var(--border)}
+.btn-ghost:hover{border-color:var(--accent)}
+
+/* Sections */
+section{padding:64px 0}
+.eyebrow{color:var(--accent);font-weight:700;letter-spacing:1.5px;text-transform:uppercase;font-size:.8rem}
+h2{font-size:2rem;margin:10px 0 14px}
+.sub{color:var(--muted);max-width:700px;margin-bottom:34px}
+
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:20px}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:22px;text-align:center}
+.stat .num{font-size:1.9rem;font-weight:800;color:var(--accent)}
+.stat .lbl{color:var(--muted);font-size:.9rem}
+
+/* Cards */
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:24px;transition:transform .2s}
+.card:hover{transform:translateY(-4px)}
+.card .icon{font-size:1.8rem;margin-bottom:10px}
+.card h3{font-size:1.15rem;margin-bottom:8px}
+.card p{color:var(--muted);font-size:.95rem}
+
+/* Demo */
+.demo{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:26px}
+.demo-controls{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-end;margin-bottom:22px}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:.85rem;color:var(--muted)}
+.field input,.field select{padding:9px 12px;border-radius:8px;border:1px solid var(--border);background:var(--card2);color:var(--text);font-size:.95rem}
+.chart-wrap{background:var(--card2);border-radius:10px;padding:16px;margin-bottom:14px}
+.chart-title{font-weight:700;margin-bottom:8px;font-size:.95rem}
+.bars{display:flex;align-items:flex-end;gap:6px;height:220px}
+.bar{flex:1;background:linear-gradient(180deg,var(--accent),var(--accent2));border-radius:6px 6px 0 0;position:relative;min-width:14px;transition:height .4s}
+.bar.actual{background:linear-gradient(180deg,var(--green),#059669)}
+.bar.forecast{background:linear-gradient(180deg,var(--amber),#b45309);opacity:.85}
+.bar:hover::after{content:attr(data-v);position:absolute;top:-26px;left:50%;transform:translateX(-50%);background:#0f172a;border:1px solid var(--border);padding:2px 8px;border-radius:6px;font-size:.75rem;white-space:nowrap}
+.axis{display:flex;justify-content:space-between;color:var(--muted);font-size:.75rem;margin-top:6px}
+.legend{display:flex;gap:18px;justify-content:center;font-size:.85rem;color:var(--muted);margin-top:10px}
+.dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:middle}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-top:16px}
+.kpi{background:var(--card2);border-radius:10px;padding:14px;text-align:center}
+.kpi .v{font-size:1.4rem;font-weight:800}
+.kpi .l{font-size:.8rem;color:var(--muted)}
+
+/* Practices list */
+.practices{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px}
+.practice{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:24px;border-left:4px solid var(--accent)}
+.practice h3{margin-bottom:8px;font-size:1.1rem}
+.practice p{color:var(--muted);font-size:.95rem}
+.tag{display:inline-block;background:rgba(56,189,248,.15);color:var(--accent);padding:3px 10px;border-radius:20px;font-size:.75rem;margin-bottom:10px}
+
+/* Footer */
+footer{border-top:1px solid var(--border);padding:34px 0;text-align:center;color:var(--muted);font-size:.9rem}
+
+@media(max-width:768px){
+  .nav-links{display:none;flex-direction:column;position:absolute;top:60px;left:0;right:0;background:var(--bg);padding:20px;border-bottom:1px solid var(--border)}
+  .nav-links.open{display:flex}
+  .hamburger{display:block}
+  .hero h1{font-size:2rem}
+  .stats{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <div class="logo">LocalStore <span>Forecast</span></div>
+    <button class="hamburger" onclick="document.querySelector('.nav-links').classList.toggle('open')">☰</button>
+    <div class="nav-links">
+      <a href="#overview">Overview</a>
+      <a href="#challenges">Challenges</a>
+      <a href="#demo">Live Demo</a>
+      <a href="#practices">Best Practices</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="container">
+    <h1>Retail Sales Forecasting for <span class="grad">Local Stores</span></h1>
+    <p>Understand the real-world challenges small retailers face — and the practical forecasting methods that actually work on the ground.</p>
+    <div class="cta">
+      <a href="#demo" class="btn btn-primary">Try the Live Forecast</a>
+      <a href="#challenges" class="btn btn-ghost">Explore Challenges</a>
+    </div>
+  </div>
+</header>
+
+<section id="overview">
+  <div class="container">
+    <div class="eyebrow">Why it matters</div>
+    <h2>Forecasting is survival for local stores</h2>
+    <p class="sub">Unlike big chains, local stores can't absorb forecasting errors with large inventories or deep capital. A single overstocked perishable line or an understocked weekend can decide a month's profit.</p>
+    <div class="stats">
+      <div class="stat"><div class="num" id="statAcc">~30%</div><div class="lbl">of small retailers overstock at least one category monthly</div></div>
+      <div class="stat"><div class="num">60-70%</div><div class="lbl">of sales variance driven by seasonality &amp; local events</div></div>
+      <div class="stat"><div class="num">&lt;20%</div><div class="lbl">of local stores use any statistical forecasting tool</div></div>
+      <div class="stat"><div class="num">5-10%</div><div class="lbl">potential margin gain from better demand planning</div></div>
+    </div>
+  </div>
+</section>
+
+<section id="challenges" style="background:#111c33">
+  <div class="container">
+    <div class="eyebrow">The hard part</div>
+    <h2>Real challenges local stores face</h2>
+    <p class="sub">These are the practical obstacles that make textbook forecasting fail in a neighborhood store.</p>
+    <div class="grid">
+      <div class="card"><div class="icon">📉</div><h3>Limited Historical Data</h3><p>New stores or fast-changing product lines have too few data points to train reliable models. Sparse, short histories force heavy reliance on judgment.</p></div>
+      <div class="card"><div class="icon">🌦️</div><h3>Weather &amp; Local Events</h3><p>A festival, a heatwave, or a school holiday can spike or crater demand in ways national models never capture.</p></div>
+      <div class="card"><div class="icon">🏪</div><h3>No Tech Infrastructure</h3><p>Most local stores track sales in spreadsheets or on paper — no POS analytics, no clean data pipelines, no dedicated staff.</p></div>
+      <div class="card"><div class="icon">🧺</div><h3>Promotions &amp; Seasonality</h3><p>Weekly discounts and seasonal cycles distort baselines, making it hard to separate real demand from promotional noise.</p></div>
+      <div class="card"><div class="icon">💰</div><h3>Perishable &amp; Cash Constraints</h3><p>Overforecasting wastes cash on unsold stock; underforecasting loses sales. Local stores can't afford either error.</p></div>
+      <div class="card"><div class="icon">🧠</div><h3>Owner Judgment Bias</h3><p>Forecasts often lean on the owner's gut feeling, which is valuable but biased by recency and optimism.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="demo">
+  <div class="container">
+    <div class="eyebrow">Interactive</div>
+    <h2>Live forecasting demo</h2>
+    <p class="sub">Adjust the inputs and watch a simple moving-average forecast update in real time — the same logic a local store can run in a spreadsheet.</p>
+    <div class="demo">
+      <div class="demo-controls">
+        <div class="field"><label>Base daily sales (units)</label><input type="number" id="base" value="60" min="10" max="200"></div>
+        <div class="field"><label>Weekly growth (%)</label><input type="number" id="growth" value="3" min="-10" max="20"></div>
+        <div class="field"><label>Seasonal spike (%)</label><input type="number" id="season" value="25" min="0" max="80"></div>
+        <div class="field"><label>Noise level</label><select id="noise"><option value="0">Low</option><option value="1" selected>Medium</option><option value="2">High</option></select></div>
+        <button class="btn btn-primary" onclick="runDemo()">Recompute</button>
+      </div>
+      <div class="chart-wrap">
+        <div class="chart-title">Last 12 weeks sales vs 4-week moving average forecast</div>
+        <div class="bars" id="bars"></div>
+        <div class="axis"><span>Week 1</span><span>Week 12</span></div>
+      </div>
+      <div class="legend">
+        <span><span class="dot" style="background:var(--green)"></span>Actual sales</span>
+        <span><span class="dot" style="background:var(--amber)"></span>Forecast (4-wk avg)</span>
+      </div>
+      <div class="kpis">
+        <div class="kpi"><div class="v" id="kpiNext">—</div><div class="l">Next week forecast</div></div>
+        <div class="kpi"><div class="v" id="kpiErr">—</div><div class="l">Avg forecast error</div></div>
+        <div class="kpi"><div class="v" id="kpiTrend">—</div><div class="l">Trend direction</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="practices" style="background:#111c33">
+  <div class="container">
+    <div class="eyebrow">What works</div>
+    <h2>Practical forecasting practices</h2>
+    <p class="sub">Field-tested approaches that fit the reality of a local store.</p>
+    <div class="practices">
+      <div class="practice"><span class="tag">Start simple</span><h3>Moving averages first</h3><p>A 4-week moving average beats a blank guess and needs no software. Add seasonality factors only when the baseline is stable.</p></div>
+      <div class="practice"><span class="tag">Layer judgment</span><h3>Combine models with local knowledge</h3><p>Blend statistical output with the owner's read on upcoming local events, weather, and holidays. Human context fills what data can't.</p></div>
+      <div class="practice"><span class="tag">Measure error</span><h3>Track forecast accuracy</h3><p>Record each week's forecast vs actuals and compute a simple error rate. What gets measured gets improved.</p></div>
+      <div class="practice"><span class="tag">Go digital</span><h3>Use spreadsheets or POS analytics</h3><p>Move from paper to a spreadsheet or a basic POS dashboard. Clean, consistent data is the foundation of any forecast.</p></div>
+      <div class="practice"><span class="tag">Segment products</span><h3>Forecast by category, not SKU</h3><p>Forecast at the category or top-SKU level. Granular SKU forecasts need data most local stores don't have.</p></div>
+      <div class="practice"><span class="tag">Stay flexible</span><h3>Re-forecast weekly</h3><p>Local demand shifts fast. Recompute every week and treat the forecast as a living number, not a fixed plan.</p></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <p><strong>LocalStore Forecast</strong> — a demonstration frontend for retail sales forecasting challenges and practices in local stores.</p>
+    <p style="margin-top:8px">Built with plain HTML, CSS &amp; JavaScript. Works in any modern browser.</p>
+  </div>
+</footer>
+
+<script>
+function seededRandom(seed){let s=seed%2147483647;if(s<=0)s+=2147483646;return function(){s=s*16807%2147483647;return(s-1)/2147483646;};}
+
+function runDemo(){
+  const base=parseFloat(document.getElementById('base').value)||60;
+  const growth=parseFloat(document.getElementById('growth').value)||0;
+  const season=parseFloat(document.getElementById('season').value)||0;
+  const noise=parseInt(document.getElementById('noise').value)||0;
+  const rnd=seededRandom(42);
+  const noisePct=[0.03,0.10,0.22][noise];
+
+  const actual=[];
+  for(let w=0;w<12;w++){
+    let trend=base*Math.pow(1+growth/100,w);
+    let seasonal=trend*(1+ (season/100)*Math.sin((w+2)/12*2*Math.PI));
+    let noiseVal=seasonal*(1+(rnd()*2-1)*noisePct);
+    actual.push(Math.max(1,Math.round(noiseVal)));
+  }
+  // 4-week moving average forecast
+  const forecast=[null,null,null,null];
+  for(let w=4;w<12;w++){
+    let sum=0;for(let i=w-4;i<w;i++)sum+=actual[i];
+    forecast.push(Math.round(sum/4));
+  }
+  // next week forecast
+  let s=0;for(let i=8;i<12;i++)s+=actual[i];
+  const next=Math.round(s/4);
+
+  // render bars
+  const bars=document.getElementById('bars');
+  bars.innerHTML='';
+  const max=Math.max(...actual,...forecast.filter(f=>f!==null))*1.15;
+  for(let w=0;w<12;w++){
+    const h=(actual[w]/max*100);
+    const bar=document.createElement('div');
+    bar.className='bar actual';
+    bar.style.height=h+'%';
+    bar.setAttribute('data-v','W'+(w+1)+': '+actual[w]);
+    bars.appendChild(bar);
+  }
+  // forecast overlay as separate row of bars below
+  const frow=document.createElement('div');
+  frow.style.cssText='display:flex;align-items:flex-end;gap:6px;height:120px;margin-top:10px';
+  for(let w=0;w<12;w++){
+    const bar=document.createElement('div');
+    bar.className='bar forecast';
+    if(forecast[w]===null){bar.style.height='0%';bar.style.background='transparent';}
+    else{bar.style.height=(forecast[w]/max*100)+'%';bar.setAttribute('data-v','W'+(w+1)+' fcst: '+forecast[w]);}
+    frow.appendChild(bar);
+  }
+  bars.appendChild(frow);
+
+  // error
+  let errSum=0,count=0;
+  for(let w=4;w<12;w++){errSum+=Math.abs(actual[w]-forecast[w])/actual[w];count++;}
+  const errPct=(errSum/count*100).toFixed(1);
+
+  document.getElementById('kpiNext').textContent=next+' units';
+  document.getElementById('kpiErr').textContent=errPct+'%';
+  const first=actual.slice(0,4).reduce((a,b)=>a+b,0)/4;
+  const last=actual.slice(8,12).reduce((a,b)=>a+b,0)/4;
+  document.getElementById('kpiTrend').textContent=last>=first?'📈 Rising':'📉 Falling';
+}
+runDemo();
+</script>
+</body>
+</html>
